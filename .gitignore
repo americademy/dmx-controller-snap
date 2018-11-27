@@ -1,0 +1,8 @@
+parts
+prime
+snap/.snapcraft
+stage
+codeverse-dmx-controller*.snap
+codeverse-dmx-controller*tar.bz2
+*.sublime-project
+*.sublime-workspace

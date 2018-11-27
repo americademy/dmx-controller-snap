@@ -1,0 +1,25 @@
+name: codeverse-dmx-controller
+version: 0.0.1
+architectures:
+  - build-on: armhf
+summary: DXM Controller for Codeverse module
+description: |
+  A simple dmx controller which exposes a web API, runs on a Codeverse module and used within the Codeverse Studios
+confinement: strict
+grade: stable
+
+apps:
+  web-api:
+    command: webserver www
+    daemon: simple
+    restart-condition: always
+    plugs:
+      - network-bind
+      - gpio
+
+parts:
+  web-api:
+    source: .
+    plugin: go
+    go-importpath: github.com/americademy/dmx-controller-snap
+
