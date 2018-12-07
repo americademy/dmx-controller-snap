@@ -1,3 +1,8 @@
-# Codeverse Portal
+# webserver
+cd webserver
+go build && ./webserver
 
-[![Snap Status](https://build.snapcraft.io/badge/americademy/dmx-controller-snap.svg)](https://build.snapcraft.io/user/americademy/dmx-controller-snap)
+# dmx server
+cd service
+gcc -Wall -pthread -o server server.c -lpigpiod_if2 -lrt
+./server

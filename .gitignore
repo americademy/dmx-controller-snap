@@ -2,6 +2,12 @@ parts
 prime
 snap/.snapcraft
 stage
+service/*.out
+webserver/webserver
+service/server
+service/server_test
+service/client
+service/client_test
 codeverse-dmx-controller*.snap
 codeverse-dmx-controller*tar.bz2
 *.sublime-project
