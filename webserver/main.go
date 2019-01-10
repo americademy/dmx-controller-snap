@@ -1,6 +1,7 @@
 package main
 
 import (
+  "os"
   "encoding/json"
   "fmt"
   "net/http"
@@ -11,6 +12,7 @@ import (
 
 var sock_err error;
 var c net.Conn;
+var socket_file = os.Getenv("SNAP_DATA") + '/dmx-server.sock';
 
 // convert the JSON format into a string such as "2:25,3:100" (where this was for channel 2 with value 25 and channel 3 with value 100)
 func createKeyValuePairs(m map[string]int) string {
@@ -25,6 +27,10 @@ func createKeyValuePairs(m map[string]int) string {
       }
     }
     return b.String()
+}
+
+func getStatus(w http.ResponseWriter, r *http.Request) {
+  w.Write([]byte("OK"))
 }
 
 func setChannelValues(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +57,7 @@ func setChannelValues(w http.ResponseWriter, r *http.Request) {
 
   fmt.Println(msg)
 
-  c, sock_err = net.Dial("unix", "/tmp/dmx.sock")
+  c, sock_err = net.Dial("unix", socket_file)
 
   if sock_err != nil {
     log.Fatal("Dial error", sock_err)
@@ -79,6 +85,8 @@ func main() {
   // start web server
   println("Preparing Server")
   http.HandleFunc("/", setChannelValues)
+
+  http.HandleFunc("/status", getStatus)
 
   println("Starting Server")
   if http_err := http.ListenAndServe(":8084", nil); http_err != nil {

@@ -1,8 +1,2 @@
-# webserver
-cd webserver
-go build && ./webserver
-
-# dmx server
-cd service
-gcc -Wall -pthread -o server server.c -lpigpiod_if2 -lrt
-./server
+sudo snap install --edge codeverse-dmx-controller
+sudo snap connect codeverse-dmx-controller:gpio-memory-control :gpio-memory-control
