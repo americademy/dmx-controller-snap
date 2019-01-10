@@ -38,18 +38,25 @@ parts:
     plugin: make
     source-type: tar
 
-  copy-pigpio:
+  copy-pigpio-library:
     plugin: dump
     source: ./parts/pigpio/install/usr/local/lib
     after: [pigpio]
     organize:
       "*.so": /lib
 
+  copy-pigpio-headers:
+    plugin: dump
+    source: ./parts/pigpio/install/usr/local/include
+    after: [pigpio]
+    organize:
+      "*.h": /include
+
   dmx-server:
     source: .
     source-subdir: dmx-server
     plugin: make
-    after: [copy-pigpio]
+    after: [copy-pigpio-library, copy-pigpio-headers]
 
   dmx-client:
     source: .
