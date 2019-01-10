@@ -22,8 +22,10 @@
 // 10 sends per second (or 16 sends per second for faster bitwise?
 // 1,000,000 in binary is 11110100001001000000
 
+char LOG_FILE[256];
+char SOCKET_FILE[256];
+
 #define BUFFER_SIZE 1024
-#define NAME "/tmp/dmx.sock"
 // to hold the messages we receive from the unix socket
 char buf[BUFFER_SIZE];
 int sock, msgsock, rval;
@@ -74,7 +76,7 @@ void sigintHandler(int sig_num) {
   // close the socket connection
   close(sock);
   // delete the actual file used for the socket
-  unlink(NAME);
+  unlink(SOCKET_FILE);
   // print a nice friendly message
   fprintf(f, "Goodbye\n");
   fflush(f);
@@ -188,24 +190,30 @@ int transmit_payload() {
 void socketConnect() {
     struct sockaddr_un server;
 
-    unlink(NAME);
+    unlink(SOCKET_FILE);
     server.sun_family = AF_UNIX;
-    strcpy(server.sun_path, NAME);
+    strcpy(server.sun_path, SOCKET_FILE);
 
     // connect the socket
     sock = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if (sock < 0) {
+        fprintf(f, "ERROR: opening stream socket\n");
+        fflush(f);
         perror("opening stream socket");
         exit(EXIT_FAILURE);
     }
 
     // bind the socket
     if (bind(sock, (struct sockaddr *) &server, sizeof(struct sockaddr_un))) {
+        fprintf(f, "ERROR: binding stream socket\n");
+        fflush(f);
         perror("binding stream socket");
         exit(EXIT_FAILURE);
     }
 
     if (listen(sock, 5) < 0)  {
+        fprintf(f, "ERROR: listen\n");
+        fflush(f);
         perror("listen");
         exit(EXIT_FAILURE);
     }
@@ -218,15 +226,17 @@ int main() {
   int fails = 0;
 
   const char* snap_data_path = getenv("SNAP_DATA");
-  char path[256];
-  snprintf(path, sizeof path, "%s/log", snap_data_path);
+  snprintf(LOG_FILE, sizeof LOG_FILE, "%s/log", snap_data_path);
+  snprintf(SOCKET_FILE, sizeof SOCKET_FILE, "%s/dmx-server.sock", snap_data_path);
 
-  printf("logging to %s\n", path);
+  printf("Starting server\nlogging output to: %s\n", LOG_FILE);
 
-  f = fopen(path, "a+"); // a+ (create + append) option will allow appending which is useful in a log file
+  f = fopen(LOG_FILE, "a+"); // a+ (create + append) option will allow appending which is useful in a log file
   if (f == NULL) {
     perror("opening log file");
   }
+
+  fprintf(f, "Starting server\n");
 
   // the specific connection to the socket and the
   // number of bytes successfully read from it on each attempt
@@ -331,6 +341,8 @@ int main() {
                 }
                 break;
               default :
+                fprintf(f, "ERROR: unexpected character\n");
+                fflush(f);
                 perror("unexpected character");
             }
           }
@@ -347,12 +359,16 @@ int main() {
         else if (bytes_read == -1) {
           // if there was an error other than EAGAIN
           if (errno != EAGAIN) {
+            fprintf(f, "ERROR: socket read\n");
+            fflush(f);
             perror("socket read");
             exit(EXIT_FAILURE);
           }
         }
         // bytes_read should be either -1 or greater than 0
         else {
+          fprintf(f, "ERROR: bytes_read should be either -1 or greater than 0\n");
+          fflush(f);
           perror("bytes_read should be either -1 or greater than 0");
         }
 
