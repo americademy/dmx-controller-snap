@@ -25,6 +25,7 @@ apps:
       LD_LIBRARY_PATH: /snap/codeverse-dmx-controller/current/usr/local/lib
     plugs:
       - gpio
+      - gpio-memory-control
       - network-bind
 
   dmx-client:
