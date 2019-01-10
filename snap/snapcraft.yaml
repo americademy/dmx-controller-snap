@@ -17,12 +17,12 @@ apps:
     plugs:
       - network-bind
 
-  # dmx-server:
-  #   command: dmx-server
-  #   daemon: simple
-  #   restart-condition: always
-  #   plugs:
-  #     - gpio
+  dmx-server:
+    command: dmx-server
+    daemon: simple
+    restart-condition: always
+    plugs:
+      - gpio
 
   dmx-client:
     command: dmx-client
@@ -33,14 +33,12 @@ parts:
     plugin: go
     go-importpath: github.com/americademy/dmx-controller-snap
 
-  # dmx-server:
-  #   source: .
-  #   source-subdir: dmx-server
-  #   plugin: make
-  #   build-packages:
-  #     - pigpio
-  #   stage-packages:
-  #     - pigpio
+  dmx-server:
+    source: .
+    source-subdir: dmx-server
+    plugin: make
+    build-snaps:
+      - pigpio
 
   dmx-client:
     source: .
