@@ -190,6 +190,8 @@ int transmit_payload() {
 void socketConnect() {
     struct sockaddr_un server;
 
+    fprintf(f, "Starting socket server on %s\n", SOCKET_FILE);
+
     unlink(SOCKET_FILE);
     server.sun_family = AF_UNIX;
     strcpy(server.sun_path, SOCKET_FILE);
