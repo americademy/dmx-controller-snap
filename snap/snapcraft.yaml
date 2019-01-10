@@ -38,11 +38,18 @@ parts:
     plugin: make
     source-type: tar
 
+  copy-pigpio:
+    plugin: dump
+    source: /build/codeverse-dmx-controller/parts/pigpio/install/usr/local/lib
+    after: [pigpio]
+    organize:
+      "*.so": /lib
+
   dmx-server:
     source: .
     source-subdir: dmx-server
     plugin: make
-    after: [pigpio]
+    after: [copy-pigpio]
 
   dmx-client:
     source: .

@@ -8,7 +8,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <errno.h>
-#include "pigpio.h"
+#include <pigpio.h>
 
 // 1 second = 1000 millisecond
 // 1 millisecond = 1000 microsecond
