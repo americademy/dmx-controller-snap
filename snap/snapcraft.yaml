@@ -17,6 +17,12 @@ apps:
     plugs:
       - network-bind
 
+  libraries:
+    plugin: dump
+    source: ./libs
+    organize:
+      "libpigpio.so": /lib
+
   dmx-server:
     command: dmx-server
     daemon: simple
