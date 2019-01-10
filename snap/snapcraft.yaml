@@ -34,7 +34,7 @@ parts:
     go-importpath: github.com/americademy/dmx-controller-snap
 
   pigpio:
-    source: abyz.me.uk/rpi/pigpio/pigpio.tar
+    source: https://github.com/joan2937/pigpio/archive/V68.tar.gz
     plugin: make
     source-type: tar
 
