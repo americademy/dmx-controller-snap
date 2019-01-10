@@ -40,7 +40,7 @@ parts:
 
   copy-pigpio:
     plugin: dump
-    source: /build/codeverse-dmx-controller/parts/pigpio/install/usr/local/lib
+    source: ./parts/pigpio/install/usr/local/lib
     after: [pigpio]
     organize:
       "*.so": /lib
