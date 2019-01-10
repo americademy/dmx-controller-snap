@@ -34,9 +34,9 @@ parts:
     go-importpath: github.com/americademy/dmx-controller-snap
 
   dmx-server:
-    source: ./server
+    source: github.com/americademy/dmx-controller-snap/server
     plugin: make
 
   dmx-client:
-    source: ./client
+    source: github.com/americademy/dmx-controller-snap/client
     plugin: make
