@@ -38,9 +38,9 @@ parts:
     source-subdir: server
     plugin: make
     build-packages:
-      - libpigpio
+      - pigpio
     stage-packages:
-      - libpigpio
+      - pigpio
 
   dmx-client:
     source: .
