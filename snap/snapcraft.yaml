@@ -34,14 +34,16 @@ parts:
     go-importpath: github.com/americademy/dmx-controller-snap
 
   pigpio:
-    source: github.com/joan2937/pigpio
+    source: abyz.me.uk/rpi/pigpio/pigpio.tar
     plugin: make
+    source-type: tar
 
   dmx-server:
     source: .
     source-subdir: dmx-server
     plugin: make
     after: [pigpio]
+    build-packages: [pigpio]
 
   dmx-client:
     source: .
