@@ -221,6 +221,8 @@ int main() {
   char path[256];
   snprintf(path, sizeof path, "%s/log", snap_data_path);
 
+  printf("logging to %s\n", path);
+
   f = fopen(path, "a+"); // a+ (create + append) option will allow appending which is useful in a log file
   if (f == NULL) {
     perror("opening log file");
