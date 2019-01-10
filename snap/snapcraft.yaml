@@ -33,12 +33,15 @@ parts:
     plugin: go
     go-importpath: github.com/americademy/dmx-controller-snap
 
+  pigpio:
+    source: github.com/joan2937/pigpio
+    plugin: make
+
   dmx-server:
     source: .
     source-subdir: dmx-server
     plugin: make
-    build-snaps:
-      - pigpio
+    after: [pigpio]
 
   dmx-client:
     source: .
