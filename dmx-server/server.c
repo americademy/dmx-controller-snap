@@ -217,7 +217,11 @@ int main() {
   int transmits = 0;
   int fails = 0;
 
-  f = fopen("/var/log/dmx_server", "a+"); // a+ (create + append) option will allow appending which is useful in a log file
+  const char* snap_data_path = getenv("SNAP_DATA");
+  char path[256];
+  snprintf(path, sizeof path, "%s/log", snap_data_path);
+
+  f = fopen(path, "a+"); // a+ (create + append) option will allow appending which is useful in a log file
   if (f == NULL) {
     perror("opening log file");
   }

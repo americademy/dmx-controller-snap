@@ -35,7 +35,7 @@ parts:
 
   # dmx-server:
   #   source: .
-  #   source-subdir: server
+  #   source-subdir: dmx-server
   #   plugin: make
   #   build-packages:
   #     - pigpio
@@ -44,5 +44,5 @@ parts:
 
   dmx-client:
     source: .
-    source-subdir: client
+    source-subdir: dmx-client
     plugin: make
