@@ -18,14 +18,14 @@ apps:
       - network-bind
 
   dmx-server:
-    command: server
+    command: dmx-server
     daemon: simple
     restart-condition: always
     plugs:
       - gpio
 
   dmx-client:
-    command: client
+    command: dmx-client
 
 parts:
   web-api:
@@ -34,9 +34,15 @@ parts:
     go-importpath: github.com/americademy/dmx-controller-snap
 
   dmx-server:
-    source: github.com/americademy/dmx-controller-snap/server
+    source: .
+    source-subdir: server
     plugin: make
+    build-packages:
+      - libpigpio
+    stage-packages:
+      - libpigpio
 
   dmx-client:
-    source: github.com/americademy/dmx-controller-snap/client
+    source: .
+    source-subdir: client
     plugin: make
