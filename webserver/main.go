@@ -51,6 +51,14 @@ func setChannelValues(w http.ResponseWriter, r *http.Request) {
 
   fmt.Println(msg)
 
+  c, sock_err = net.Dial("unix", "/tmp/dmx.sock")
+
+  if sock_err != nil {
+    log.Fatal("Dial error", sock_err)
+  }
+
+  defer c.Close()
+
   // send this command via the unix domain socket
   _, message_err := c.Write([]byte(msg))
 
@@ -67,14 +75,6 @@ func main() {
 
   // open socket to dmx controller
   println("Connecting to DMX daemon")
-  c, sock_err = net.Dial("unix", "/tmp/test_server.sock")
-
-  if sock_err != nil {
-    log.Fatal("Dial error", sock_err)
-  }
-
-  defer c.Close()
-
 
   // start web server
   println("Preparing Server")

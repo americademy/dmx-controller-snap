@@ -1,5 +1,3 @@
-// build with :  gcc -Wall -o native_server native_server.c -lpigpio -lrt  && ./native_server
-
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -41,12 +39,11 @@ struct sockaddr_un server;
 typedef enum { false, true } bool;
 
 int running = 1;
-int transmitted_bits = 0;
 
 // for measuring how long execution takes
 struct timeval tv;
 
-#define DMX_CHANNELS 190
+#define DMX_CHANNELS 60
 #define BREAK_BITS 40
 #define MAB_BITS 5
 #define DMX_BITS_COUNT BREAK_BITS + MAB_BITS + (DMX_CHANNELS * 11)
@@ -66,6 +63,8 @@ bool dmx_bits[DMX_BITS_COUNT];
 // the socket connection
 int sock;
 
+FILE *f;
+
 /*
     Signal Handler for SIGINT, to close our
     connections and clean up before exiting
@@ -77,8 +76,8 @@ void sigintHandler(int sig_num) {
   // delete the actual file used for the socket
   unlink(NAME);
   // print a nice friendly message
-  printf("Goodbye\n");
-  printf("Average successful bytes : %d\n", (transmitted_bits-50)/8);
+  fprintf(f, "Goodbye\n");
+  fflush(f);
   // exit cleanly
   gpioTerminate();
   exit(sig_num);
@@ -95,9 +94,16 @@ unsigned long dmx_bit_tick() {
   return ((1000000 * tv.tv_sec) + tv.tv_usec);
 }
 
-void setDmxValue(unsigned short channel, unsigned char value) {
+void setDmxValue(unsigned short channel, unsigned short value) {
   if (channel > DMX_CHANNELS) {
-    printf("cant set channel to %d as it is greater than %d max channels", channel, DMX_CHANNELS);
+    fprintf(f, "cant set channel %d as it is greater than %d max channels", channel, DMX_CHANNELS);
+    fflush(f);
+    exit(EXIT_FAILURE);
+  }
+
+  if (value > 255) {
+    fprintf(f, "cant set channel %d to value %d as it is greater than 255", channel, value);
+    fflush(f);
     exit(EXIT_FAILURE);
   }
 
@@ -211,6 +217,11 @@ int main() {
   int transmits = 0;
   int fails = 0;
 
+  f = fopen("/var/log/dmx_server", "a+"); // a+ (create + append) option will allow appending which is useful in a log file
+  if (f == NULL) {
+    perror("opening log file");
+  }
+
   // the specific connection to the socket and the
   // number of bytes successfully read from it on each attempt
   int connection, bytes_read;
@@ -225,6 +236,27 @@ int main() {
 
   while(running) {
 
+    gpioWrite(OUTPUT_PIN, true);
+    usleep(1000);
+    waitForInterrupt();
+    skipped_bits = transmit_payload();
+    transmits++;
+
+    if (skipped_bits) {
+      fails++;
+      fprintf(f, "skipped %d bits for transmission %d\n", skipped_bits, transmits);
+      fflush(f);
+      usleep(1000);
+    } else {
+      fails = 0;
+    }
+
+    gpioWrite(OUTPUT_PIN, true);
+
+    if (fails > 10000) {
+      exit(EXIT_FAILURE);
+    }
+
     connection = accept(sock, 0, 0);
     if (connection > 0) {
       // read from the socket and put the data into the buffer
@@ -233,7 +265,8 @@ int main() {
 
         // was data received from the socket
         if (bytes_read > 0) {
-          printf("Received %s\n", buf);
+          fprintf(f, "Received %s\n", buf);
+          fflush(f);
 
           int channel = 0;
           int value = 0;
@@ -252,10 +285,11 @@ int main() {
               // when we reach a comma, we have finished this channel/value pair
               case ',':
                 // set the last value (the socket API we expose is not 0 indexed, because neither is the DMX standard)
-                setDmxValue(channel - 1, value);
+                setDmxValue(channel, value);
 
                 if (VERBOSE) {
-                  printf("Received channel %d value %d\n", channel, value);
+                  fprintf(f, "Received channel %d value %d\n", channel, value);
+                  fflush(f);
                 }
 
                 // start again
@@ -295,10 +329,11 @@ int main() {
             }
           }
           // set the last value (the socket API we expose is not 0 indexed, because neither is the DMX standard)
-          setDmxValue(channel - 1, value);
+          setDmxValue(channel, value);
 
           if (VERBOSE) {
-            printf("Received channel %d value %d\n", channel, value);
+            fprintf(f, "Received channel %d value %d\n", channel, value);
+            fflush(f);
           }
         }
         // no data was available, and we received an unexpected response
@@ -320,28 +355,6 @@ int main() {
       }
 
       close(connection);
-    }
-
-
-
-    gpioWrite(OUTPUT_PIN, true);
-    usleep(1000);
-    waitForInterrupt();
-    skipped_bits = transmit_payload();
-    transmits++;
-
-    if (skipped_bits) {
-      fails++;
-      printf("skipped %d bits for transmission %d\n", skipped_bits, transmits);
-      usleep(1000);
-    } else {
-      fails = 0;
-    }
-
-    gpioWrite(OUTPUT_PIN, true);
-
-    if (fails > 10) {
-      exit(EXIT_FAILURE);
     }
 
   }

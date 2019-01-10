@@ -1,11 +1,13 @@
-// build with :  gcc -o client client.c
 // use ./client 2 250
 
+#include <fcntl.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <stdio.h>
+#include <string.h>
 
 #define NAME "/tmp/dmx.sock"
 
@@ -36,7 +38,7 @@ int main(int argc, char *argv[]) {
     } else {
 
         char data[80];
-        sprintf(data, "0:%d,1:%d", channel, value);
+        sprintf(data, "%d:%d", channel, value);
 
         if (write(sock, data, sizeof(data)) < 0) {
             perror("writing on stream socket");
