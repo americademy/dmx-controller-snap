@@ -12,7 +12,6 @@ import (
 
 var sock_err error;
 var c net.Conn;
-var socket_file = os.Getenv("SNAP_DATA") + '/dmx-server.sock';
 
 // convert the JSON format into a string such as "2:25,3:100" (where this was for channel 2 with value 25 and channel 3 with value 100)
 func createKeyValuePairs(m map[string]int) string {
@@ -34,7 +33,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func setChannelValues(w http.ResponseWriter, r *http.Request) {
-
+  socket_file := os.Getenv("SNAP_DATA") + '/dmx-server.sock'
   buf := new(bytes.Buffer)
   buf.ReadFrom(r.Body)
   newStr := buf.String()
