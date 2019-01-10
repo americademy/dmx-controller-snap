@@ -24,7 +24,6 @@ apps:
     environment:
       LD_LIBRARY_PATH: /snap/codeverse-dmx-controller/current/usr/local/lib
     plugs:
-      - gpio
       - gpio-memory-control
       - network-bind
 
@@ -37,16 +36,10 @@ parts:
     plugin: go
     go-importpath: github.com/americademy/dmx-controller-snap
 
-  pigpio:
-    source: https://github.com/joan2937/pigpio/archive/V68.tar.gz
-    plugin: make
-    source-type: tar
-
   dmx-server:
     source: .
     source-subdir: dmx-server
     plugin: make
-    after: [pigpio]
 
   dmx-client:
     source: .
