@@ -33,7 +33,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func setChannelValues(w http.ResponseWriter, r *http.Request) {
-  socket_file := os.Getenv("SNAP_DATA") + '/dmx-server.sock'
+  socket_file := os.Getenv("SNAP_DATA") + "/dmx-server.sock"
   buf := new(bytes.Buffer)
   buf.ReadFrom(r.Body)
   newStr := buf.String()
