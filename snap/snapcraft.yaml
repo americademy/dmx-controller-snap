@@ -14,6 +14,9 @@ apps:
     command: webserver www
     daemon: simple
     restart-condition: always
+
+  nginx:
+    command: bin/nginx.sh
     plugs:
       - network-bind
 
@@ -35,6 +38,33 @@ parts:
     source: .
     plugin: go
     go-importpath: github.com/americademy/dmx-controller-snap
+
+  nginx-build:
+    plugin: autotools
+    source: https://github.com/nginx/nginx.git
+    source-type: git
+    # move configure from ./auto to the root folder
+    prepare: |
+        cp auto/configure .
+    configflags:
+        - --without-http_rewrite_module
+        - --without-http_gzip_module
+        - --error-log-path=logs/error.log
+        - --http-log-path=logs/nginx.log
+    build-packages:
+        - libc6
+        - libgd3
+        - libgeoip1
+        - libpcre3
+        - libssl1.0.0
+        - libxml2
+        - libxslt1.1
+        - zlib1g
+
+  nginx-launcher:
+    plugin: copy
+    files:
+      nginx/start.sh: bin/nginx.sh
 
   dmx-server:
     source: .
