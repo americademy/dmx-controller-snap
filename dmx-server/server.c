@@ -165,12 +165,12 @@ int running = 1;
 // for measuring how long execution takes
 struct timeval tv;
 
-#define DMX_CHANNELS 60
+#define DMX_CHANNELS 92
 #define BREAK_BITS 40
 #define MAB_BITS 5
 #define DMX_BITS_COUNT BREAK_BITS + MAB_BITS + (DMX_CHANNELS * 11)
 
-// TODO : looks like the first bit isnt being written, and the last bit in the array is LOW but should be HIGH
+// TODO : looks like the first bit isn't being written, and the last bit in the array is LOW but should be HIGH
 
 // used for more legible code below
 #define CHANNEL_PART 1
