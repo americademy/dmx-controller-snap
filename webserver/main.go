@@ -8,10 +8,22 @@ import (
   "net"
   "log"
   "bytes"
+  "time"
 )
 
 var sock_err error;
 var c net.Conn;
+
+func maxClients(h http.Handler, n int) http.Handler {
+  sema := make(chan struct{}, n)
+
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    sema <- struct{}{}
+    defer func() { <-sema }()
+
+    h.ServeHTTP(w, r)
+  })
+}
 
 // convert the JSON format into a string such as "2:25,3:100" (where this was for channel 2 with value 25 and channel 3 with value 100)
 func createKeyValuePairs(m map[string]int) string {
@@ -29,6 +41,7 @@ func createKeyValuePairs(m map[string]int) string {
 }
 
 func getStatus(w http.ResponseWriter, r *http.Request) {
+  time.Sleep(2*time.Second)
   w.Write([]byte("OK"))
 }
 
@@ -83,9 +96,12 @@ func main() {
 
   // start web server
   println("Preparing Server")
-  http.HandleFunc("/", setChannelValues)
 
-  http.HandleFunc("/status", getStatus)
+  channelValues := http.HandlerFunc(setChannelValues)
+  http.Handle("/", maxClients(channelValues, 1))
+
+  statusHandler := http.HandlerFunc(getStatus)
+  http.Handle("/status", maxClients(statusHandler, 5))
 
   println("Starting Server")
   if http_err := http.ListenAndServe(":8084", nil); http_err != nil {
