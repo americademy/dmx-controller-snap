@@ -145,7 +145,7 @@ int gpioInitialise(void)
 char LOG_FILE[256];
 char SOCKET_FILE[256];
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 10240000
 // to hold the messages we receive from the unix socket
 char buf[BUFFER_SIZE];
 int sock, msgsock, rval;
