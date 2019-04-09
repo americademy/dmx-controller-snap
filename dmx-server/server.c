@@ -25,6 +25,16 @@ static volatile uint32_t  *gpioReg = MAP_FAILED;
 #define PI_BANK (gpio>>5)
 #define PI_BIT  (1<<(gpio&0x1F))
 
+// set to 0 or 1, when 1 (truthy) it will not actually write to the gpiomem and
+// can be tested on non raspberry pi devices, such as an ubuntu virtual machine
+// on my mac
+#define SIMULATE 1
+
+// if SOCK_NONBLOCK is not defined, then define it as the same value of O_NONBLOCK
+#ifndef SOCK_NONBLOCK
+#define SOCK_NONBLOCK O_NONBLOCK
+#endif
+
 /* gpio modes. */
 
 #define PI_OUTPUT 1
@@ -41,8 +51,13 @@ void gpioSetMode(unsigned gpio, unsigned mode)
 
 void gpioWrite(unsigned gpio, unsigned level)
 {
-   if (level == 0) *(gpioReg + GPCLR0 + PI_BANK) = PI_BIT;
-   else            *(gpioReg + GPSET0 + PI_BANK) = PI_BIT;
+  if (SIMULATE) {
+    return;
+  } else if (level == 0) {
+    *(gpioReg + GPCLR0 + PI_BANK) = PI_BIT;
+  } else {
+    *(gpioReg + GPSET0 + PI_BANK) = PI_BIT;
+  }
 }
 
 unsigned gpioHardwareRevision(void)
@@ -310,7 +325,11 @@ void socketConnect() {
 
     fprintf(f, "Starting socket server on %s\n", SOCKET_FILE);
 
-    unlink(SOCKET_FILE);
+    if (access(SOCKET_FILE, F_OK) != -1) {
+      fprintf(f, "Deleting existing socket file\n");
+      unlink(SOCKET_FILE);
+    }
+
     server.sun_family = AF_UNIX;
     strcpy(server.sun_path, SOCKET_FILE);
 
@@ -337,7 +356,6 @@ void socketConnect() {
         perror("listen");
         exit(EXIT_FAILURE);
     }
-
 }
 
 int main() {
@@ -345,7 +363,12 @@ int main() {
   int transmits = 0;
   int fails = 0;
 
-  const char* snap_data_path = getenv("SNAP_DATA");
+  const char *snap_data_path;
+  if (getenv("SNAP_DATA")) {
+    snap_data_path = getenv("SNAP_DATA");
+  } else {
+    snap_data_path = "/tmp";
+  }
   snprintf(LOG_FILE, sizeof LOG_FILE, "%s/log", snap_data_path);
   snprintf(SOCKET_FILE, sizeof SOCKET_FILE, "%s/dmx-server.sock", snap_data_path);
 
@@ -363,7 +386,9 @@ int main() {
   int connection, bytes_read;
 
   socketConnect();
-  gpioSetup();
+  if (SIMULATE == 0) {
+    gpioSetup();
+  }
 
   // Set the SIGINT (Ctrl-C) signal handler to sigintHandler
   signal(SIGINT, sigintHandler);
@@ -392,6 +417,8 @@ int main() {
     gpioWrite(OUTPUT_PIN, true);
 
     if (fails > 10000) {
+      fprintf(f, "Exiting because there were too many sequential failed transmissions");
+      fflush(f);
       exit(EXIT_FAILURE);
     }
 

@@ -8,10 +8,24 @@
 #include <stdio.h>
 #include <string.h>
 
+// if SOCK_NONBLOCK is not defined, then define it as the same value of O_NONBLOCK
+#ifndef SOCK_NONBLOCK
+#define SOCK_NONBLOCK O_NONBLOCK
+#endif
+
 char SOCKET_FILE[256];
 
 int main(int argc, char *argv[], char * envp[]) {
-  const char* snap_data_path = getenv("SNAP_DATA");
+  const char *snap_data_path;
+  if (getenv("SNAP_DATA"))
+  {
+    snap_data_path = getenv("SNAP_DATA");
+  }
+  else
+  {
+    snap_data_path = "/tmp";
+  }
+
   snprintf(SOCKET_FILE, sizeof SOCKET_FILE, "%s/dmx-server.sock", snap_data_path);
 
   int channel = strtol(argv[1], NULL, 10);

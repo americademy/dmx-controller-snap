@@ -11,6 +11,10 @@ import (
   "time"
 )
 
+type TemporaryError interface {
+  Temporary() bool
+}
+
 var sock_err error;
 var c net.Conn;
 
@@ -46,8 +50,14 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func setChannelValues(w http.ResponseWriter, r *http.Request) {
-  socket_file := os.Getenv("SNAP_DATA") + "/dmx-server.sock"
+  socket_file := ""
+  if (len(os.Getenv("SNAP_DATA")) > 0) {
+    socket_file = os.Getenv("SNAP_DATA") + "/dmx-server.sock"
+  } else {
+    socket_file = "/tmp/dmx-server.sock"
+  }
   buf := new(bytes.Buffer)
+
   buf.ReadFrom(r.Body)
   newStr := buf.String()
 
@@ -69,9 +79,13 @@ func setChannelValues(w http.ResponseWriter, r *http.Request) {
 
   fmt.Println(msg)
 
+  connectToSocket:
   c, sock_err = net.Dial("unix", socket_file)
-
-  if sock_err != nil {
+  // if this is a temporary error, then retry
+  if terr, ok := sock_err.(TemporaryError); ok && terr.Temporary() {
+    time.Sleep(20*time.Millisecond)
+    goto connectToSocket
+  } else if (sock_err != nil) {
     log.Fatal("Dial error", sock_err)
   }
 
@@ -95,7 +109,7 @@ func main() {
   println("Connecting to DMX daemon")
 
   // start web server
-  println("Preparing Server")
+  println("Starting Server")
 
   channelValues := http.HandlerFunc(setChannelValues)
   http.Handle("/", maxClients(channelValues, 1))
@@ -103,7 +117,8 @@ func main() {
   statusHandler := http.HandlerFunc(getStatus)
   http.Handle("/status", maxClients(statusHandler, 5))
 
-  println("Starting Server")
+  println("Ready")
+
   if http_err := http.ListenAndServe(":8084", nil); http_err != nil {
     panic(http_err)
   }
