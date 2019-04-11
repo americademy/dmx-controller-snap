@@ -28,7 +28,7 @@ static volatile uint32_t  *gpioReg = MAP_FAILED;
 // set to 0 or 1, when 1 (truthy) it will not actually write to the gpiomem and
 // can be tested on non raspberry pi devices, such as an ubuntu virtual machine
 // on my mac
-#define SIMULATE 1
+#define SIMULATE 0
 
 // if SOCK_NONBLOCK is not defined, then define it as the same value of O_NONBLOCK
 #ifndef SOCK_NONBLOCK
