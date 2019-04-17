@@ -29,7 +29,7 @@ static volatile uint32_t  *gpioReg = MAP_FAILED;
 // set to 0 or 1, when 1 (truthy) it will not actually write to the gpiomem and
 // can be tested on non raspberry pi devices, such as an ubuntu virtual machine
 // on my mac
-#define SIMULATE 0
+#define SIMULATE 1
 
 // if SOCK_NONBLOCK is not defined, then define it as the same value of O_NONBLOCK
 #ifndef SOCK_NONBLOCK
@@ -230,7 +230,7 @@ void sigsegvHandler(int sig) {
   // print out all the frames to stderr
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
 void gpioSetup() {
@@ -245,14 +245,12 @@ unsigned long dmx_bit_tick() {
 
 void setDmxValue(unsigned short channel, unsigned short value) {
   if (channel > DMX_CHANNELS) {
-    fprintf(f, "cant set channel %d as it is greater than %d max channels", channel, DMX_CHANNELS);
-    fflush(f);
+    fprintf(stderr, "cant set channel %d as it is greater than %d max channels\n", channel, DMX_CHANNELS);
     exit(EXIT_FAILURE);
   }
 
   if (value > 255) {
-    fprintf(f, "cant set channel %d to value %d as it is greater than 255", channel, value);
-    fflush(f);
+    fprintf(stderr, "cant set channel %d to value %d as it is greater than 255\n", channel, value);
     exit(EXIT_FAILURE);
   }
 
@@ -350,24 +348,18 @@ void socketConnect() {
     // connect the socket
     sock = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if (sock < 0) {
-        fprintf(f, "ERROR: opening stream socket\n");
-        fflush(f);
-        perror("opening stream socket");
+        fprintf(stderr, "ERROR: opening stream socket\n");
         exit(EXIT_FAILURE);
     }
 
     // bind the socket
     if (bind(sock, (struct sockaddr *) &server, sizeof(struct sockaddr_un))) {
-        fprintf(f, "ERROR: binding stream socket\n");
-        fflush(f);
-        perror("binding stream socket");
+        fprintf(stderr, "ERROR: binding stream socket\n");
         exit(EXIT_FAILURE);
     }
 
     if (listen(sock, 5) < 0)  {
-        fprintf(f, "ERROR: listen\n");
-        fflush(f);
-        perror("listen");
+        fprintf(stderr, "ERROR: listen\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -390,7 +382,8 @@ int main() {
 
   f = fopen(LOG_FILE, "a+"); // a+ (create + append) option will allow appending which is useful in a log file
   if (f == NULL) {
-    perror("opening log file");
+    fprintf(stderr, "Could not open log file for writing\n");
+    exit(EXIT_FAILURE);
   }
 
   fprintf(f, "Starting server\n");
@@ -432,8 +425,7 @@ int main() {
     gpioWrite(OUTPUT_PIN, true);
 
     if (fails > 10000) {
-      fprintf(f, "Exiting because there were too many sequential failed transmissions");
-      fflush(f);
+      fprintf(stderr, "Exiting because there were too many sequential failed transmissions\n");
       exit(EXIT_FAILURE);
     }
 
@@ -510,9 +502,9 @@ int main() {
                 }
                 break;
               default :
-                fprintf(f, "ERROR: unexpected character\n");
-                fflush(f);
-                perror("unexpected character");
+                fprintf(stderr, "ERROR: unexpected character\n");
+                fprintf(stderr, "ERROR: unexpected character in buffer %s\n", buf);
+                exit(EXIT_FAILURE);
             }
           }
           // set the last value (the socket API we expose is not 0 indexed, because neither is the DMX standard)
@@ -528,17 +520,14 @@ int main() {
         else if (bytes_read == -1) {
           // if there was an error other than EAGAIN
           if (errno != EAGAIN) {
-            fprintf(f, "ERROR: socket read\n");
-            fflush(f);
-            perror("socket read");
+            fprintf(stderr, "ERROR: socket read\n");
             exit(EXIT_FAILURE);
           }
         }
         // bytes_read should be either -1 or greater than 0
         else {
-          fprintf(f, "ERROR: bytes_read should be either -1 or greater than 0\n");
-          fflush(f);
-          perror("bytes_read should be either -1 or greater than 0");
+          fprintf(stderr, "ERROR: bytes_read should be either -1 or greater than 0\n");
+          exit(EXIT_FAILURE);
         }
 
         // zero fill the buffer again before we try and read into it
