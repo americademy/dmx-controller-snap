@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <execinfo.h>
 
 #define GPSET0 7
 #define GPCLR0 10
@@ -219,6 +220,19 @@ void sigintHandler(int sig_num) {
   exit(sig_num);
 }
 
+void sigsegvHandler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
 void gpioSetup() {
   gpioInitialise();
   gpioSetMode(OUTPUT_PIN, PI_OUTPUT);
@@ -392,6 +406,7 @@ int main() {
 
   // Set the SIGINT (Ctrl-C) signal handler to sigintHandler
   signal(SIGINT, sigintHandler);
+  signal(SIGSEGV, sigsegvHandler);
 
   prepareDmxValues();
 
