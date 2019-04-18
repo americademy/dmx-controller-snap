@@ -30,7 +30,7 @@ func maxClients(h http.Handler, n int) http.Handler {
 }
 
 // convert the JSON format into a string such as "2:25,3:100" (where this was for channel 2 with value 25 and channel 3 with value 100)
-func createKeyValuePairs(m map[string]int) string {
+func createKeyValuePairs(m map[string]uint8) string {
     b := new(bytes.Buffer)
     var first = true;
     for key, value := range m {
@@ -66,7 +66,7 @@ func setChannelValues(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  m := map[string]int{}
+  m := map[string]uint8{}
   err := json.Unmarshal([]byte(newStr), &m)
 
   if err != nil {
