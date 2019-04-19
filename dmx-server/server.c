@@ -181,7 +181,7 @@ int running = 1;
 // for measuring how long execution takes
 struct timeval tv;
 
-#define DMX_CHANNELS 92
+#define DMX_CHANNELS 78
 #define BREAK_BITS 40
 #define MAB_BITS 5
 #define DMX_BITS_COUNT BREAK_BITS + MAB_BITS + (DMX_CHANNELS * 11)
@@ -423,11 +423,6 @@ int main() {
     }
 
     gpioWrite(OUTPUT_PIN, true);
-
-    if (fails > 10000) {
-      fprintf(stderr, "Exiting because there were too many sequential failed transmissions\n");
-      exit(EXIT_FAILURE);
-    }
 
     // if we're getting a lot of interrupts in a row, then sleep for .1 second every 10th time
     if (fails >= 10 && fails % 10 == 0) {
